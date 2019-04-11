@@ -5,25 +5,37 @@ namespace App\Http\Controllers;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\JWTAuth;
 
 class UserController extends Controller
 {
-    public function __construct()
+    protected $jwt;
+
+    public function __construct(JWTAuth $jwt)
     {
-        //
+        $this->jwt = $jwt;
+        $this->middleware('auth:api',[
+            'except' => [
+                'create',
+                'login'
+            ]
+        ]);
     }
 
     public function create(Request $request)
     {
         $this->validate($request, [
             'name' => 'required|max:60',
-            'email' => 'required|unique:users|max:80',
+            'email' => 'required|email|unique:users|max:80',
             'password' => 'required|confirmed|max:32',
             'active' => ''
         ]);
         $user = new User($request->all());
-        $user->password = Crypt::encrypt($request->input('password'));
+        // $user->password = Crypt::encrypt($request->input('password'));
+        $user->password = Hash::make($request->input('password'));
         $user->api_token = str_random(60);
         $user->save();
         return $user;
@@ -31,15 +43,22 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $data = $request->only('email', 'password');
-        $user = User::where('email', $data['email'])->first();
-        if (Crypt::decrypt($user->password) == $data['password']) {
-            $user->api_token = str_random(60);
-            $user->update();
-            return ['api_token' => $user->api_token];
-        } else {
+        if(!$token = $this->jwt->claims(['email' => $request->input('email')])->attempt($request->only('email', 'password'))){
             return new Response('Dados inválidos. Informe os dados corretamente.', 401);
         }
+        return Response()->json(compact('token'));
+    }
+
+    public function viewUserAuth()
+    {
+        $user = Auth::user();
+        return Response()->json($user);
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return Response()->json('Logout', 200);
     }
 
     public function getUser($id)
@@ -58,7 +77,7 @@ class UserController extends Controller
     {
         $dataValidate = [
             'name' => 'required|max:60',
-            'email' => 'required|unique:users|max:80'
+            'email' => 'required|email|unique:users|max:80'
         ];
 
         if (isset($request->all()['password'])) {
