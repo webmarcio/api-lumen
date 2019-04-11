@@ -35,7 +35,6 @@ class UserTest extends TestCase
             'name' => $this->data['name'],
             'email' => $this->data['email']
         ]);
-
     }
 
     public function testGetUser()
@@ -50,6 +49,20 @@ class UserTest extends TestCase
         $this->assertArrayHasKey('name', $res);
         $this->assertArrayHasKey('email', $res);
         $this->assertArrayHasKey('active', $res);
+    }
+
+    public function testGetAllUsers()
+    {
+        $this->get('/api/users');
+        $this->assertResponseOk();
+        $this->seeJsonStructure([
+            '*' => [
+                'id',
+                'name',
+                'email',
+                'active'
+            ]
+        ]);
     }
 
     public function testUpdateUser()
@@ -70,6 +83,13 @@ class UserTest extends TestCase
             'email' => $user->email,
             'id' => $user->id
         ]);
+    }
 
+    public function testDeleteUser()
+    {
+        $user = \App\User::first();
+        $this->delete('/api/user/' . $user->id);
+        $this->assertResponseOk();
+        $this->assertEquals('user successfully removed!', $this->response->content());
     }
 }

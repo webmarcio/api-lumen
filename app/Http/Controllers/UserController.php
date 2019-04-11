@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Crypt;
 
 class UserController extends Controller
@@ -33,6 +34,12 @@ class UserController extends Controller
         return $user;
     }
 
+    public function getAllUsers()
+    {
+        $users = User::all();
+        return $users;
+    }
+
     public function update(Request $request, $id)
     {
         $this->validate($request, [
@@ -50,5 +57,13 @@ class UserController extends Controller
         return $user;
     }
 
+    public function delete($id)
+    {
+        if (User::destroy($id)) {
+            return new Response('user successfully removed!', 200);
+        } else {
+            return new Response('Sorry, there was an error while trying to remove this user.', 401);
+        }
+    }
 
 }

@@ -17,5 +17,7 @@ $router->get('/', function () use ($router) {
 
 $router->post('api/user', 'UserController@create');
 $router->get('api/user/{id}', 'UserController@getUser');
+$router->get('api/users', 'UserController@getAllUsers');
 $router->put('api/user/{id}', 'UserController@update');
+$router->delete('api/user/{id}', 'UserController@delete');
 
