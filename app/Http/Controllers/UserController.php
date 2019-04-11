@@ -22,7 +22,7 @@ class UserController extends Controller
             'active' => ''
         ]);
         $user = new User($request->all());
-        $user->password = Crypt::encrypt($request['password']);
+        $user->password = Crypt::encrypt($request->input('password'));
         $user->save();
         return $user;
     }
@@ -32,4 +32,23 @@ class UserController extends Controller
         $user = User::find($id);
         return $user;
     }
+
+    public function update(Request $request, $id)
+    {
+        $this->validate($request, [
+            'name' => 'required|max:60',
+            'email' => 'required|unique:users|max:80',
+            'password' => 'required|max:32',
+            'active' => ''
+        ]);
+        $user = User::find($id);
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->password = Crypt::encrypt($request->input('password'));
+        $user->active = $request->input('active');
+        $user->update();
+        return $user;
+    }
+
+
 }

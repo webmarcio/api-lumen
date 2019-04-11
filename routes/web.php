@@ -15,5 +15,7 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->get('api/user/{id}', 'UserController@getUser');
 $router->post('api/user', 'UserController@create');
+$router->get('api/user/{id}', 'UserController@getUser');
+$router->put('api/user/{id}', 'UserController@update');
+

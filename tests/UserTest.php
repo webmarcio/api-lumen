@@ -11,8 +11,8 @@ class UserTest extends TestCase
     {
         parent::__construct($name, $data, $dataName);
         $this->data = [
-            'name' => str_random(60),
-            'email' => str_random(30).'@exemplo.com',
+            'name' => str_random(50),
+            'email' => str_random(40).'@exemplo.com',
             'password' => '123456',
             'active' => 1
         ];
@@ -31,6 +31,11 @@ class UserTest extends TestCase
         $this->assertArrayHasKey('email', $res);
         $this->assertArrayHasKey('active', $res);
 
+        $this->seeInDatabase('users', [
+            'name' => $this->data['name'],
+            'email' => $this->data['email']
+        ]);
+
     }
 
     public function testGetUser()
@@ -45,5 +50,26 @@ class UserTest extends TestCase
         $this->assertArrayHasKey('name', $res);
         $this->assertArrayHasKey('email', $res);
         $this->assertArrayHasKey('active', $res);
+    }
+
+    public function testUpdateUser()
+    {
+        $user = \App\User::first();
+        $this->put('/api/user/'.$user->id, $this->data);
+        $this->assertResponseOk();
+
+        $res = (array) json_decode($this->response->content());
+
+        $this->assertArrayHasKey('id', $res);
+        $this->assertArrayHasKey('name', $res);
+        $this->assertArrayHasKey('email', $res);
+        $this->assertArrayHasKey('active', $res);
+
+        $this->notSeeInDatabase('users', [
+            'name' => $user->name,
+            'email' => $user->email,
+            'id' => $user->id
+        ]);
+
     }
 }
