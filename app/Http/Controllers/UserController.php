@@ -19,7 +19,7 @@ class UserController extends Controller
         $this->validate($request, [
             'name' => 'required|max:60',
             'email' => 'required|unique:users|max:80',
-            'password' => 'required|max:32',
+            'password' => 'required|confirmed|max:32',
             'active' => ''
         ]);
         $user = new User($request->all());
@@ -42,17 +42,32 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->validate($request, [
+        $dataValidate = [
             'name' => 'required|max:60',
-            'email' => 'required|unique:users|max:80',
-            'password' => 'required|max:32',
-            'active' => ''
-        ]);
+            'email' => 'required|unique:users|max:80'
+        ];
+
+        if (isset($request->all()['password'])) {
+            $dataValidate['password'] = 'required|confirmed|max:32';
+        }
+
+        if (isset($request->all()['active'])) {
+            $dataValidate['active'] = '';
+        }
+
+        $this->validate($request, $dataValidate);
         $user = User::find($id);
         $user->name = $request->input('name');
         $user->email = $request->input('email');
-        $user->password = Crypt::encrypt($request->input('password'));
-        $user->active = $request->input('active');
+
+        if (isset($request->all()['password'])) {
+            $user->password = Crypt::encrypt($request->input('password'));
+        }
+
+        if (isset($request->all()['active'])) {
+            $user->active = $request->input('active');
+        }
+
         $user->update();
         return $user;
     }
