@@ -24,8 +24,22 @@ class UserController extends Controller
         ]);
         $user = new User($request->all());
         $user->password = Crypt::encrypt($request->input('password'));
+        $user->api_token = str_random(60);
         $user->save();
         return $user;
+    }
+
+    public function login(Request $request)
+    {
+        $data = $request->only('email', 'password');
+        $user = User::where('email', $data['email'])->first();
+        if (Crypt::decrypt($user->password) == $data['password']) {
+            $user->api_token = str_random(60);
+            $user->update();
+            return ['api_token' => $user->api_token];
+        } else {
+            return new Response('Dados inválidos. Informe os dados corretamente.', 401);
+        }
     }
 
     public function getUser($id)

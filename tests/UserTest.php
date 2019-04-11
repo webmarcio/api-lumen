@@ -6,6 +6,7 @@ class UserTest extends TestCase
 {
     use DatabaseTransactions;
     public $data = [];
+    public $api_token = [];
 
     public function __construct($name = null, array $data = [], $dataName = '')
     {
@@ -17,11 +18,12 @@ class UserTest extends TestCase
             'password_confirmation' => '123456',
             'active' => 1
         ];
+        $this->api_token = ['api_token' => \App\User::where('api_token', '<>', '')->first()->api_token];
     }
 
     public function testCreateUser()
     {
-        $this->post('/api/user', $this->data);
+        $this->post('/api/user', $this->data, $this->api_token);
         $this->assertResponseOk();
 
         $res = (array) json_decode($this->response->content());
@@ -37,10 +39,22 @@ class UserTest extends TestCase
         ]);
     }
 
+    public function testLogin()
+    {
+        $this->post('/api/user', $this->data, $this->api_token);
+        $this->assertResponseOk();
+
+        $this->post('/api/login', $this->data);
+        $this->assertResponseOk();
+
+        $res = (array) json_decode($this->response->content());
+        $this->assertArrayHasKey('api_token', $res);
+    }
+
     public function testGetUser()
     {
         $user = \App\User::first();
-        $this->get('/api/user/'.$user->id);
+        $this->get('/api/user/'.$user->id, $this->api_token);
         $this->assertResponseOk();
 
         $res = (array) json_decode($this->response->content());
@@ -53,7 +67,7 @@ class UserTest extends TestCase
 
     public function testGetAllUsers()
     {
-        $this->get('/api/users');
+        $this->get('/api/users', $this->api_token);
         $this->assertResponseOk();
         $this->seeJsonStructure([
             '*' => [
@@ -68,7 +82,7 @@ class UserTest extends TestCase
     public function testUpdateUserWithPassword()
     {
         $user = \App\User::first();
-        $this->put('/api/user/'.$user->id, $this->data);
+        $this->put('/api/user/'.$user->id, $this->data, $this->api_token);
         $this->assertResponseOk();
 
         $res = (array) json_decode($this->response->content());
@@ -94,7 +108,7 @@ class UserTest extends TestCase
         ];
 
         $user = \App\User::first();
-        $this->put('/api/user/'.$user->id, $data);
+        $this->put('/api/user/'.$user->id, $data, $this->api_token);
         $this->assertResponseOk();
 
         $res = (array) json_decode($this->response->content());
@@ -121,7 +135,7 @@ class UserTest extends TestCase
         ];
 
         $user = \App\User::first();
-        $this->put('/api/user/'.$user->id, $data);
+        $this->put('/api/user/'.$user->id, $data, $this->api_token);
         $this->assertResponseOk();
 
         $res = (array) json_decode($this->response->content());
@@ -141,7 +155,7 @@ class UserTest extends TestCase
     public function testDeleteUser()
     {
         $user = \App\User::first();
-        $this->delete('/api/user/' . $user->id);
+        $this->delete('/api/user/' . $user->id, $this->api_token);
         $this->assertResponseOk();
         $this->assertEquals('user successfully removed!', $this->response->content());
     }
